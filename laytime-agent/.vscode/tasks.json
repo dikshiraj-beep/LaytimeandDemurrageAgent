@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Setup (Windows): venv + install + ingest", "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts/setup_windows.ps1", "problemMatcher": [] },
+    { "label": "Setup (macOS/Linux): venv + install + ingest", "type": "shell",
+      "command": "bash scripts/setup_mac_linux.sh", "problemMatcher": [] }
+  ]
+}

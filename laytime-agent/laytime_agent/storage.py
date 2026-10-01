@@ -1,0 +1,178 @@
+"""SQLite storage tier: documents, chunks, weather/holiday/port reference data, memory, runs and trace logs."""
+from __future__ import annotations
+
+import json
+import sqlite3
+from contextlib import contextmanager
+from datetime import datetime
+
+from . import config
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS cases (
+  case_id TEXT PRIMARY KEY, folder TEXT, vessel TEXT, port TEXT, operation TEXT, charterers TEXT, ingested_at TEXT);
+CREATE TABLE IF NOT EXISTS documents (
+  doc_id TEXT PRIMARY KEY, case_id TEXT, path TEXT, filename TEXT, doc_type TEXT, precedence INTEGER, text TEXT);
+CREATE TABLE IF NOT EXISTS chunks (
+  chunk_id TEXT PRIMARY KEY, doc_id TEXT, case_id TEXT, doc_type TEXT, precedence INTEGER,
+  ref TEXT, title TEXT, text TEXT);
+CREATE TABLE IF NOT EXISTS weather (
+  case_id TEXT, station TEXT, ts TEXT, precip_mm REAL, wind_dir TEXT, wind_kn INTEGER,
+  visibility_nm REAL, remarks TEXT);
+CREATE INDEX IF NOT EXISTS ix_weather ON weather(case_id, ts);
+CREATE TABLE IF NOT EXISTS holidays (port TEXT, date TEXT, name TEXT);
+CREATE TABLE IF NOT EXISTS ports (port TEXT PRIMARY KEY, info TEXT);
+CREATE TABLE IF NOT EXISTS past_claims (
+  claim_id TEXT PRIMARY KEY, vessel TEXT, counterparty TEXT, port TEXT, claimed_usd REAL,
+  settled_usd REAL, status TEXT, lessons TEXT);
+CREATE TABLE IF NOT EXISTS lessons (
+  id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT, counterparty TEXT, port TEXT, vessel TEXT,
+  text TEXT, source_run TEXT);
+CREATE TABLE IF NOT EXISTS runs (
+  run_id TEXT PRIMARY KEY, case_id TEXT, started_at TEXT, finished_at TEXT, status TEXT,
+  provider TEXT, result TEXT, approved_by TEXT);
+CREATE TABLE IF NOT EXISTS trace (
+  run_id TEXT, seq INTEGER, ts TEXT, node TEXT, kind TEXT, message TEXT, data TEXT);
+CREATE INDEX IF NOT EXISTS ix_trace ON trace(run_id, seq);
+"""
+
+
+def connect() -> sqlite3.Connection:
+    config.ensure_dirs()
+    con = sqlite3.connect(config.DB_PATH, check_same_thread=False)
+    con.row_factory = sqlite3.Row
+    return con
+
+
+@contextmanager
+def db():
+    con = connect()
+    try:
+        yield con
+        con.commit()
+    finally:
+        con.close()
+
+
+def init_db(reset: bool = False):
+    with db() as con:
+        if reset:
+            for t in ("cases", "documents", "chunks", "weather", "holidays", "ports", "past_claims"):
+                con.execute(f"DROP TABLE IF EXISTS {t}")
+        con.executescript(SCHEMA)
+
+
+def rows(sql: str, args=()) -> list[dict]:
+    with db() as con:
+        return [dict(r) for r in con.execute(sql, args).fetchall()]
+
+
+def one(sql: str, args=()) -> dict | None:
+    r = rows(sql, args)
+    return r[0] if r else None
+
+
+def execute(sql: str, args=()):
+    with db() as con:
+        con.execute(sql, args)
+
+
+# ------------------------------------------------------------------ reference data
+def list_cases():
+    return rows("SELECT * FROM cases ORDER BY case_id")
+
+
+def case_documents(case_id: str, doc_type: str | None = None):
+    if doc_type:
+        return rows("SELECT * FROM documents WHERE case_id=? AND doc_type=? ORDER BY filename", (case_id, doc_type))
+    return rows("SELECT * FROM documents WHERE case_id=? ORDER BY filename", (case_id,))
+
+
+def weather_between(case_id: str, start: str, end: str):
+    """Hourly rows whose hour overlaps [start, end). Times are 'YYYY-MM-DD HH:MM' local."""
+    return rows("SELECT * FROM weather WHERE case_id=? AND ts>=? AND ts<? ORDER BY ts",
+                (case_id, start[:13] + ":00", end))
+
+
+def holidays_for(port: str):
+    return rows("SELECT * FROM holidays WHERE lower(port)=lower(?) ORDER BY date", (port,))
+
+
+def port_info(port: str) -> dict | None:
+    r = one("SELECT info FROM ports WHERE lower(port)=lower(?)", (port,))
+    return json.loads(r["info"]) if r else None
+
+
+# ------------------------------------------------------------------ memory
+def recall(counterparty: str = "", port: str = "", vessel: str = "") -> list[dict]:
+    """Past claims + learned lessons relevant to this counterparty, port or vessel."""
+    cp = (counterparty or "").split(",")[0].strip()
+    out = []
+    for r in rows("SELECT * FROM past_claims"):
+        why = []
+        if cp and cp.lower() in (r["counterparty"] or "").lower():
+            why.append("same counterparty")
+        if port and port.lower() == (r["port"] or "").lower():
+            why.append("same port")
+        if vessel and vessel.lower() == (r["vessel"] or "").lower():
+            why.append("same vessel")
+        if why or "time-barred" in (r["status"] or ""):
+            out.append({"source": r["claim_id"], "why": ", ".join(why) or "company-wide lesson",
+                        "lesson": r["lessons"], "status": r["status"]})
+    for r in rows("SELECT * FROM lessons ORDER BY id DESC LIMIT 50"):
+        why = []
+        if cp and cp.lower() in (r["counterparty"] or "").lower():
+            why.append("same counterparty")
+        if port and port.lower() == (r["port"] or "").lower():
+            why.append("same port")
+        if why:
+            out.append({"source": f"lesson #{r['id']} ({r['source_run']})", "why": ", ".join(why),
+                        "lesson": r["text"], "status": "learned"})
+    return out
+
+
+def add_lesson(counterparty, port, vessel, text, source_run):
+    if one("SELECT 1 FROM lessons WHERE text=?", (text,)):
+        return   # already known - do not store duplicates
+    execute("INSERT INTO lessons(created_at, counterparty, port, vessel, text, source_run) VALUES (?,?,?,?,?,?)",
+            (datetime.now().isoformat(timespec="seconds"), counterparty, port, vessel, text, source_run))
+
+
+# ------------------------------------------------------------------ runs + trace
+def create_run(run_id, case_id, provider):
+    execute("INSERT INTO runs(run_id, case_id, started_at, status, provider) VALUES (?,?,?,?,?)",
+            (run_id, case_id, datetime.now().isoformat(timespec="seconds"), "running", provider))
+
+
+def update_run(run_id, **fields):
+    if not fields:
+        return
+    if "result" in fields and not isinstance(fields["result"], str):
+        fields["result"] = json.dumps(fields["result"], default=str)
+    sets = ", ".join(f"{k}=?" for k in fields)
+    execute(f"UPDATE runs SET {sets} WHERE run_id=?", (*fields.values(), run_id))
+
+
+def get_run(run_id):
+    r = one("SELECT * FROM runs WHERE run_id=?", (run_id,))
+    if r and r.get("result"):
+        r["result"] = json.loads(r["result"])
+    return r
+
+
+def list_runs(limit=30):
+    return rows("SELECT run_id, case_id, started_at, finished_at, status, provider, approved_by "
+                "FROM runs ORDER BY started_at DESC LIMIT ?", (limit,))
+
+
+def add_trace(run_id, seq, entry: dict):
+    execute("INSERT INTO trace(run_id, seq, ts, node, kind, message, data) VALUES (?,?,?,?,?,?,?)",
+            (run_id, seq, entry.get("ts"), entry.get("node"), entry.get("kind"), entry.get("message"),
+             json.dumps(entry.get("data"), default=str) if entry.get("data") is not None else None))
+
+
+def get_trace(run_id):
+    out = rows("SELECT * FROM trace WHERE run_id=? ORDER BY seq", (run_id,))
+    for r in out:
+        r["data"] = json.loads(r["data"]) if r["data"] else None
+    return out

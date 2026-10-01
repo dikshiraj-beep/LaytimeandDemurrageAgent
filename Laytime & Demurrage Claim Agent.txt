@@ -1,0 +1,17 @@
+Laytime & Demurrage Claim Agent (Chartering + Ops + Accounts)
+
+The friction: A demurrage claim means cross-reading the charter party, the Statement of Facts, NOR, weather logs and port rules. It takes hours per claim, errors cost real money, and claims have time bars.
+
+What the agent does:
+
+Plans: Identifies the C/P form (GENCON, NYPE, ASBATANKVOY), then decides which clauses matter: laytime allowance, NOR tendering, exceptions ("WIBON", "SHINC/SHEX", weather working days), and demurrage rate.
+
+Multi-step tools: A PDF/OCR parser for the SOF, clause retrieval from the C/P, a weather API for rain stoppages, a holiday calendar for the port, and a Python calculator for time counting.
+
+Retrieval grading: Checks whether the retrieved clause actually defines "laytime commencement" or just mentions it. If it's the wrong one, it re-queries.
+
+Self-correction: Reconciles the SOF against the C/P. For example, if NOR was tendered before arrival at the berth, it checks whether the C/P allows that and recalculates. It also flags when the SOF's total times don't add up.
+
+Output: A laytime statement plus a draft claim letter, with every deduction cited to a clause or SOF line.
+
+Why it's strong: Clear right/wrong answers you can test against past claims, measurable time saved, and it hits every agentic criterion.

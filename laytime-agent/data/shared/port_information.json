@@ -1,0 +1,51 @@
+{
+  "Port Kestrel": {
+    "timezone": "UTC+02:00",
+    "port_limits": "Within a 6 nm radius of Kestrel Point light",
+    "customary_anchorages": [
+      "Kestrel Inner Anchorage (within port limits)"
+    ],
+    "pilotage": "Compulsory",
+    "typical_shift_anchorage_to_berth_hours": 2.5
+  },
+  "Halvard Bay": {
+    "timezone": "UTC+01:00",
+    "port_limits": "Line joining Halvard Head and Skarn Point",
+    "customary_anchorages": [
+      "Anchorage A",
+      "Anchorage B (both within port limits)"
+    ],
+    "working_days": "Monday to Saturday; Sundays and public holidays are non-working unless worked",
+    "pilotage": "Compulsory",
+    "typical_shift_anchorage_to_berth_hours": 2.5
+  },
+  "Santa Rilla": {
+    "timezone": "UTC+04:00",
+    "port_limits": "Area within 5 nm of Rilla breakwater light; outer roads beyond this are OUTSIDE port limits",
+    "rilla_breakwater_light": {
+      "lat": 16.166667,
+      "lon": 61.083333,
+      "display": "16\u00b010.0'N 061\u00b005.0'E"
+    },
+    "port_limits_radius_nm": 5.0,
+    "customary_anchorages": [
+      "Anchorage Alpha (within port limits)",
+      "Anchorage Bravo (within port limits)"
+    ],
+    "anchorage_alpha": {
+      "centre_lat": 16.141667,
+      "centre_lon": 61.038333,
+      "radius_nm": 1.0,
+      "display": "centre 16\u00b008.5'N 061\u00b002.3'E, radius 1.0 nm"
+    },
+    "anchorage_bravo": {
+      "centre_lat": 16.105,
+      "centre_lon": 61.061667,
+      "radius_nm": 1.0,
+      "display": "centre 16\u00b006.3'N 061\u00b003.7'E, radius 1.0 nm"
+    },
+    "notes": "During congestion vessels are instructed to drift at outer roads (10-15 nm off) until an anchorage is allocated.",
+    "pilotage": "Compulsory",
+    "typical_shift_anchorage_to_berth_hours": 3.0
+  }
+}

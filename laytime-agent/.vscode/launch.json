@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    { "name": "0. Setup check", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run.py", "args": ["check"], "console": "integratedTerminal", "cwd": "${workspaceFolder}" },
+    { "name": "1. Ingest data (rebuild DB + vector index)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run.py", "args": ["ingest", "--reset"], "console": "integratedTerminal", "cwd": "${workspaceFolder}" },
+    { "name": "2. UI (Streamlit)", "type": "debugpy", "request": "launch",
+      "module": "streamlit", "args": ["run", "ui/app.py", "--server.headless", "false"],
+      "console": "integratedTerminal", "cwd": "${workspaceFolder}", "justMyCode": true },
+    { "name": "3. REST API (FastAPI)", "type": "debugpy", "request": "launch",
+      "module": "uvicorn", "args": ["laytime_agent.api:app", "--reload", "--port", "8000"],
+      "console": "integratedTerminal", "cwd": "${workspaceFolder}", "justMyCode": true },
+    { "name": "4. Run Case C in terminal (with approval prompt)", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run.py", "args": ["case", "case_C_seren_talon"], "console": "integratedTerminal", "cwd": "${workspaceFolder}" },
+    { "name": "5. Evaluate agent vs answer key", "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/run.py", "args": ["eval"], "console": "integratedTerminal", "cwd": "${workspaceFolder}" },
+    { "name": "6. Tests (pytest)", "type": "debugpy", "request": "launch",
+      "module": "pytest", "args": ["-q"], "console": "integratedTerminal", "cwd": "${workspaceFolder}" }
+  ],
+  "compounds": [
+    { "name": "UI + API together", "configurations": ["2. UI (Streamlit)", "3. REST API (FastAPI)"] }
+  ]
+}

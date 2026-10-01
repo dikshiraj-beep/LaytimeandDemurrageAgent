@@ -1,0 +1,27 @@
+Build your own private version of Google Photos or Apple Photos that runs completely on your own machine. Your goal in this capstone project is to architect, code, and deploy a Multi-Modal Image Search and Automated Face-Tagging System.
+
+
+
+For the Scene Search - Use SentenceTransformer('clip-ViT-B-32')
+
+For the Facial Recognition - Use DeepFace or InsightFace
+
+
+
+Full RAG - Query Transformation, Guardrails (Request, Response), Chunking, Retrieval, Generation with Prompt Engineering techniques, VectorDB
+
+
+
+Naren' project requirements:
+
+https://docs.google.com/document/d/1jsTbKLEmfSOVpJt41BHL6nlaX6RkKn2uQTo0BotKPZM/edit?usp=drivesdk
+
+*Use this as a starting document*
+
+===============
+Github username: dikshiraj-beep
+
+Configure Git
+git config --global user name "Your Name"
+
+git config --global user.name "dikshiraj-beep"

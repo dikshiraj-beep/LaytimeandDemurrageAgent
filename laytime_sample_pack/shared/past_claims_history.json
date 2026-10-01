@@ -1,0 +1,42 @@
+[
+  {
+    "claim_id": "BOS-DEM-2025-014",
+    "vessel": "MV CORAL MERIDIAN",
+    "counterparty": "Norcastle Grain Trading S.A.",
+    "port": "Port Kestrel",
+    "claimed_usd": 41200,
+    "settled_usd": 38900,
+    "status": "settled",
+    "lessons": "Charterers rejected rain deductions until the port meteorological log was attached. Always attach weather evidence."
+  },
+  {
+    "claim_id": "BOS-DEM-2025-031",
+    "vessel": "MV ASTER HORIZON",
+    "counterparty": "Tresco Energy Resources Pte. Ltd.",
+    "port": "Halvard Bay",
+    "claimed_usd": -7320,
+    "settled_usd": -7320,
+    "status": "settled (despatch paid by Owners)",
+    "lessons": "Charterers accept Owners' laytime statement promptly when SHEX holidays are cited against the published port holiday calendar."
+  },
+  {
+    "claim_id": "BOS-DEM-2025-047",
+    "vessel": "MV SEREN TALON",
+    "counterparty": "Almadra Agro Inputs FZE",
+    "port": "Santa Rilla",
+    "claimed_usd": 58750,
+    "settled_usd": 44100,
+    "status": "settled after dispute",
+    "lessons": "Claim reduced because the first NOR was tendered at outer roads outside port limits and was invalid. Check vessel position against port limits before accepting NOR time."
+  },
+  {
+    "claim_id": "BOS-DEM-2026-006",
+    "vessel": "MV CORAL MERIDIAN",
+    "counterparty": "Kallos Feed Mills Ltd.",
+    "port": "Port Aldmere",
+    "claimed_usd": 12400,
+    "settled_usd": 0,
+    "status": "time-barred",
+    "lessons": "Claim lost: submitted 4 days after the C/P time bar. Diarise time bar on completion of discharge."
+  }
+]

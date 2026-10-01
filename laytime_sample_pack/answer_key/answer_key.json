@@ -1,0 +1,136 @@
+{
+  "A": {
+    "laytime_allowed_hours": 135.0,
+    "laytime_commenced": "2026-03-10 18:10",
+    "completed": "2026-03-18 10:25",
+    "deductions": [
+      {
+        "reason": "Shifting anchorage to first berth (Cl. 7)",
+        "hours": 2.4
+      },
+      {
+        "reason": "Rain - weather working days (Cl. 6)",
+        "hours": 9.75
+      }
+    ],
+    "laytime_used_hours": 135.0,
+    "result": "DEMURRAGE",
+    "laytime_expired": "2026-03-16 21:19",
+    "time_on_demurrage_hours": 37.1,
+    "time_on_demurrage_days": 1.545833,
+    "rate_usd_per_day": 18000,
+    "amount_usd": 27825.0,
+    "claim_time_bar": "2027-03-18",
+    "case": "A",
+    "difficulty": "Easy",
+    "vessel": "MV CORAL MERIDIAN",
+    "port": "Port Kestrel",
+    "operation": "Discharge",
+    "traps_the_agent_should_catch": [
+      "C/P contains separate LOADING (Cl. 5) and DISCHARGING (Cl. 6) laytime clauses with different rates - agent must retrieve the discharge clause (8,000 MT/day), not the loading clause (10,000 MT/day).",
+      "Rain on 17 March falls after laytime expired - once on demurrage always on demurrage, so it must NOT be deducted.",
+      "Laytime ends at completion of discharge (Cl. 6), not when documents are on board or vessel sails."
+    ]
+  },
+  "B": {
+    "laytime_allowed_hours": 96.0,
+    "laytime_commenced": "2026-04-30 06:00",
+    "completed": "2026-05-05 03:30",
+    "deductions": [
+      {
+        "reason": "Public holiday not worked - SHEX UU (Cl. 5)",
+        "hours": 24.0
+      },
+      {
+        "reason": "Shifting anchorage to first berth (Cl. 7)",
+        "hours": 2.5
+      },
+      {
+        "reason": "Rain - weather working days (Cl. 5)",
+        "hours": 2.0
+      },
+      {
+        "reason": "Strike of stevedores (Cl. 16)",
+        "hours": 6.0
+      }
+    ],
+    "laytime_used_hours": 83.0,
+    "result": "DESPATCH",
+    "time_saved_hours": 13.0,
+    "time_saved_days": 0.541667,
+    "rate_usd_per_day": 11000.0,
+    "amount_usd": 5958.33,
+    "claim_time_bar": "2027-05-05",
+    "case": "B",
+    "difficulty": "Medium",
+    "vessel": "MV ASTER HORIZON",
+    "port": "Halvard Bay",
+    "operation": "Load",
+    "traps_the_agent_should_catch": [
+      "Time waiting at anchorage for berth COUNTS (WIBON) - it is not excluded.",
+      "1 May is a public holiday (see holiday calendar) and was not worked -> excluded; Sunday 3 May WAS worked -> counts in full under 'unless used'. Saturday is not excepted.",
+      "Result is DESPATCH, not demurrage: loading finished before laytime expired. Despatch is half the demurrage rate on working time saved."
+    ]
+  },
+  "C": {
+    "laytime_allowed_hours": 144.0,
+    "laytime_commenced": "2026-06-10 22:45",
+    "completed": "2026-06-19 15:20",
+    "deductions": [
+      {
+        "reason": "Shifting anchorage to first berth (Cl. 7)",
+        "hours": 2.7
+      },
+      {
+        "reason": "Rain - weather working days (Cl. 6)",
+        "hours": 3.5
+      },
+      {
+        "reason": "Rain - weather working days (Cl. 6); SOF end date corrected 14th -> 15th",
+        "hours": 4.0
+      }
+    ],
+    "laytime_used_hours": 144.0,
+    "result": "DEMURRAGE",
+    "laytime_expired": "2026-06-17 08:57",
+    "time_on_demurrage_hours": 54.3833,
+    "time_on_demurrage_days": 2.265972,
+    "rate_usd_per_day": 14250,
+    "amount_usd": 32290.1,
+    "claim_time_bar": "2026-10-17",
+    "case": "C",
+    "difficulty": "Hard",
+    "vessel": "MV SEREN TALON",
+    "port": "Santa Rilla",
+    "operation": "Discharge",
+    "traps_the_agent_should_catch": [
+      "NOR No. 1 was tendered while drifting OUTSIDE port limits -> invalid under recap. Laytime runs from NOR No. 2 (16:45 on 10 June) + 6 hours = 22:45. Using NOR No. 1 would overstate the claim by roughly 17.7 hours.",
+      "Negotiation trail: demurrage moved 15,000 (main terms, on subjects) -> 14,000 (Charterers' counter) -> 14,250 (final, confirmed when subjects lifted). Agent must use the final agreed figure from the clean recap, not an earlier negotiation email.",
+      "Recap prevails over printed C/P:demurrage USD 14,250/day (not 15,000); time bar 120 days (not 90); laytime trigger 6 hours (not 12).",
+      "SOF data error: rain stop recorded as '14/06/2026 02:00' - earlier than its start. Weather log confirms rain 22:00 on 14th to 02:00 on 15th; agent must detect and correct.",
+      "Disputed rain 16 June 10:30-12:00: Master's remark says no rain on board and the port weather log shows 0.0 mm -> NOT excluded, counts as laytime.",
+      "Shore crane breakdown is not an excepted event under the C/P (only breakdown of vessel's gear is) -> time counts.",
+      "Time bar: claim due within 120 days of completion of discharge = 2026-10-17. Using the printed 90 days would wrongly conclude the claim is already time-barred."
+    ],
+    "image_evidence": [
+      {
+        "file": "images/ais_track_screenshot.png",
+        "agent_should_read": "NOR No. 1 position 16\u00b005.2'N 060\u00b051.3'E at 09/06 23:05 LT, status Drifting; NOR No. 2 position 16\u00b008.6'N 061\u00b002.2'E at 10/06 16:45 LT, status At anchor.",
+        "deterministic_check": "Distance from Rilla breakwater light (port_information.json): NOR 1 = 14.0 nm (> 5 nm port limits -> OUTSIDE); NOR 2 = 3.0 nm (inside), 0.14 nm from Anchorage Alpha centre (inside 1 nm radius).",
+        "conclusion": "Confirms NOR No. 1 invalid under the recap; laytime runs from NOR No. 2 + 6 h = 10/06 22:45."
+      },
+      {
+        "file": "images/sof_signed_scan.jpg",
+        "agent_should_read": "Three handwritten additions not in the typed SOF: (1) '14' struck through and corrected to '15' on the 02:00 rain-stopped line, initialled 'D.O. / RPA'; (2) agent's note 'vsl outside port limits - NOR 1 not accepted'; (3) Master's circled 16/06 10:30 rain line with 'NO RAIN on board - disputed'. Also 'Signed under protest - see LOP 19/06', agent's round stamp, Master's stamp, received stamp 19 Jun 2026 17:40.",
+        "deterministic_check": "Compare scanned SOF against typed statement_of_facts.pdf line by line and list differences.",
+        "conclusion": "Signed SOF itself corrects the rain-stop date to 15/06 (evidence for the typo fix) and shows the port agent did not accept NOR No. 1. Signed SOF prevails over the unsigned typed copy."
+      },
+      {
+        "file": "images/deck_log_16jun2026.jpg",
+        "agent_should_read": "16 June 2026, hours 10-11: weather code 'bc' (no rain code r/d/p), visibility 10 nm; remarks '10:30 Disch. STOPPED by receivers' order' and 'No rain / no precipitation'; Master's note disputing the SOF rain stoppage.",
+        "deterministic_check": "Wind directions in the deck log match port_weather_log.csv for 16 June; precip 0.0 mm at 10:00 and 11:00.",
+        "conclusion": "Three independent sources (deck log, weather log, Master's SOF remark) agree there was no rain -> 10:30-12:00 on 16 June counts as laytime; it is not an excepted period."
+      }
+    ]
+  }
+}

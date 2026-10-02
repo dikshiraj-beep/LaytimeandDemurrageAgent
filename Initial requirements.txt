@@ -32,3 +32,8 @@ git config --global user.email dikshiraj@gmail.com
 C:\Users\LENOVO\Documents\Dheeba\Asphero_CapstoneProject\References for Git in Capstone project.docx
 
 git commit -m "Second commit to Push References for Git in Capstone project.docx"
+==========
+
+Claude prompt:
+
+read the readme.md and plan.md files and create the agent, front end Streamlit UI, use/create api keys to connect to back end datasource. Ask me for confirmations whenever required 

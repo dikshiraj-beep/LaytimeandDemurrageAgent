@@ -1,7 +1,8 @@
 """One entry point for everything.
 
   python run.py check              # verify setup (packages, .env, data)
-  python run.py ingest [--reset]   # load documents -> SQLite + Chroma vector DB
+    python run.py ingest [--reset]   # load documents -> configured DB + Chroma vector DB
+    python run.py migrate-db         # copy local SQLite records to an empty configured PostgreSQL DB
   python run.py ui                 # Streamlit front end  (http://localhost:8501)
   python run.py api                # FastAPI REST API      (http://127.0.0.1:8000/docs)
   python run.py case <case_id> [--auto]   # run one case in the terminal
@@ -36,6 +37,14 @@ def cmd_check(_):
 def cmd_ingest(a):
     from laytime_agent import ingest
     print(ingest.ingest(reset=a.reset))
+
+
+def cmd_migrate_db(_):
+    from laytime_agent.migrate import migrate_sqlite_to_postgres
+    counts = migrate_sqlite_to_postgres()
+    for table, count in counts.items():
+        print(f"{table:14}: {count}")
+    print("SQLite source retained unchanged. Uploaded files, Chroma index and checkpoint history are separate stores.")
 
 
 def cmd_ui(_):
@@ -78,6 +87,7 @@ if __name__ == "__main__":
     s = sub.add_parser("ingest")
     s.add_argument("--reset", action="store_true")
     s.set_defaults(f=cmd_ingest)
+    sub.add_parser("migrate-db").set_defaults(f=cmd_migrate_db)
     sub.add_parser("ui").set_defaults(f=cmd_ui)
     sub.add_parser("api").set_defaults(f=cmd_api)
     s = sub.add_parser("case")

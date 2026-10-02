@@ -14,6 +14,7 @@ CASES_DIR = DATA_DIR / "cases"
 SHARED_DIR = DATA_DIR / "shared"
 STORE_DIR = ROOT / "storage"            # created at runtime, git-ignored
 DB_PATH = STORE_DIR / "laytime.db"      # SQLite: documents, logs, memory, runs, trace
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 CHROMA_DIR = STORE_DIR / "chroma"       # Chroma vector DB
 CHECKPOINT_DB = STORE_DIR / "checkpoints.db"   # LangGraph checkpoints (pause / approve / resume)
 OUTPUT_DIR = ROOT / "outputs"           # claim letters and laytime statements

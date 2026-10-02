@@ -43,10 +43,11 @@ flowchart TD
 Resolution is per field: e.g. Case C takes the demurrage *rate* from the recap but *once on demurrage* from C/P Cl. 9.
 
 ## Storage
-- `storage/laytime.db` - tables `cases, documents, chunks, weather, holidays, ports, past_claims, lessons, runs, trace`
+- By default, `storage/laytime.db` (SQLite); optionally, set `DATABASE_URL` to use PostgreSQL for tables `cases, documents, chunks, weather, holidays, ports, past_claims, lessons, runs, trace`
 - `storage/chroma/` - vector index of clause chunks (metadata: case, doc type, precedence, clause ref)
-- `storage/checkpoints.db` - LangGraph checkpoints (a paused run survives an app restart)
+- `storage/checkpoints.db` (SQLite default) or PostgreSQL when configured - LangGraph checkpoints (a paused run survives an app restart)
 - `outputs/<run_id>/` - `claim_letter.md`, `laytime_statement.json`, `laytime_statement.csv`
+- Uploaded source files remain under `data/cases/`; configure shared object storage separately if those must be centralized too.
 
 ## Design choices
 - **LLM for reading and judgement, code for arithmetic.** Money figures always come from the deterministic engine and are re-verified independently.

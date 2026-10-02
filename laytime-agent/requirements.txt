@@ -1,6 +1,8 @@
 # Agent orchestration
 langgraph>=1.0
 langgraph-checkpoint-sqlite>=2.0
+langgraph-checkpoint-postgres>=2.0
+psycopg[binary]>=3.2
 # Retrieval tier
 chromadb>=1.0
 rank-bm25>=0.2.2

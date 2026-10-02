@@ -19,7 +19,7 @@ and drafts a cited claim letter. It remembers lessons from past claims.
 | LLM | Anthropic Claude, OpenAI or Azure OpenAI (or `mock` = offline heuristics) | `laytime_agent/llm.py` |
 | Tools | SOF/NOR readers, clause grader, weather, holidays, port-limit geo check, vision, laytime calculator | `laytime_agent/tools/` |
 | Retrieval | Chroma vector DB + BM25, fused with reciprocal rank fusion | `laytime_agent/vectorstore.py` |
-| Storage + memory | SQLite: documents, chunks, weather, holidays, ports, past claims, lessons, runs, trace; LangGraph checkpoints | `laytime_agent/storage.py`, `storage/` |
+| Storage + memory | SQLite by default or optional PostgreSQL: documents, chunks, weather, holidays, ports, past claims, lessons, runs, trace, and LangGraph checkpoints | `laytime_agent/storage.py`, `storage/` |
 | Evaluation | Scores the agent and a naive one-shot RAG baseline against the answer key | `evals/` |
 
 ---
@@ -46,6 +46,21 @@ This creates `.venv`, installs `requirements.txt`, creates `.env` (mock mode), a
 SQLite + the Chroma vector DB. You can also run it from `Terminal > Run Task... > Setup`.
 
 Then select the interpreter: `Ctrl+Shift+P > Python: Select Interpreter > .venv`.
+
+### Optional: use PostgreSQL for relational records
+The default is local SQLite. To use your PostgreSQL server, install the requirements, then set `DATABASE_URL`
+in your ignored local `.env` (never commit or share it):
+```ini
+DATABASE_URL=postgresql://laytime_app:URL_ENCODED_PASSWORD@127.0.0.1:5432/laytime_agent
+```
+URL-encode special characters in the password. Restart the app after changing `.env`. PostgreSQL then stores
+case metadata, document text/chunks, weather and shared reference records, lessons, runs, traces, and new
+LangGraph approval checkpoints. Run `python run.py migrate-db` once to copy those existing relational records
+from `storage/laytime.db`; the command refuses a non-empty PostgreSQL target and keeps the SQLite source intact.
+
+Original uploaded files remain under `data/cases/`, generated letters/statements remain under `outputs/`, and
+the Chroma vector index remains under `storage/chroma/`. These file/vector stores are still local and are not
+made central by the PostgreSQL setting.
 
 ### 3. Run
 Use the **Run and Debug** panel (`Ctrl+Shift+D`) and pick a configuration:

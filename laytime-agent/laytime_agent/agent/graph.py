@@ -40,15 +40,25 @@ def build_graph(checkpointer=None):
 
 
 _GRAPH = None
+_CHECKPOINTER_CONN = None
 
 
 def get_graph():
-    """Compiled graph with a persistent SQLite checkpointer (pause, approve, resume - even after a restart)."""
-    global _GRAPH
+    """Compile with PostgreSQL checkpoints when configured, otherwise use local SQLite."""
+    global _GRAPH, _CHECKPOINTER_CONN
     if _GRAPH is None:
         config.ensure_dirs()
-        conn = sqlite3.connect(config.CHECKPOINT_DB, check_same_thread=False)
-        _GRAPH = build_graph(SqliteSaver(conn))
+        if config.DATABASE_URL:
+            import psycopg
+            from langgraph.checkpoint.postgres import PostgresSaver
+
+            _CHECKPOINTER_CONN = psycopg.connect(config.DATABASE_URL, autocommit=True)
+            checkpointer = PostgresSaver(_CHECKPOINTER_CONN)
+            checkpointer.setup()
+        else:
+            conn = sqlite3.connect(config.CHECKPOINT_DB, check_same_thread=False)
+            checkpointer = SqliteSaver(conn)
+        _GRAPH = build_graph(checkpointer)
     return _GRAPH
 
 

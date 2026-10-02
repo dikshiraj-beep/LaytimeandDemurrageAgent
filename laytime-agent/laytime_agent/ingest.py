@@ -6,6 +6,7 @@ Run:  python run.py ingest        (add --reset to rebuild from scratch)
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import logging
 import re
@@ -115,6 +116,39 @@ def sof_header(text: str) -> dict:
             "operation": grab(r"Operation"), "charterers": grab(r"Charterers")}
 
 
+def source_fingerprint() -> str:
+    """Hash the case and shared files that the ingestion pipeline reads."""
+    digest = hashlib.sha256()
+    shared_inputs = {"port_holidays_2026.csv", "port_information.json", "past_claims_history.json"}
+    for label, folder in (("cases", config.CASES_DIR), ("shared", config.SHARED_DIR)):
+        if not folder.exists():
+            continue
+        for path in sorted(item for item in folder.rglob("*") if item.is_file()):
+            if label == "shared" and path.suffix.lower() != ".pdf" and path.name not in shared_inputs:
+                continue
+            relative = path.relative_to(folder).as_posix()
+            digest.update(f"{label}/{relative}\0".encode("utf-8"))
+            with path.open("rb") as source:
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def sources_changed() -> bool:
+    """Return whether files on disk differ from the last successful ingest."""
+    manifest = config.STORE_DIR / "indexed_sources.sha256"
+    if not manifest.is_file():
+        return True
+    return manifest.read_text(encoding="ascii").strip() != source_fingerprint()
+
+
+def _record_indexed_sources() -> None:
+    manifest = config.STORE_DIR / "indexed_sources.sha256"
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(source_fingerprint() + "\n", encoding="ascii")
+
+
 # ------------------------------------------------------------------ main
 def ingest(reset: bool = False) -> dict:
     config.ensure_dirs()
@@ -130,8 +164,8 @@ def ingest(reset: bool = False) -> dict:
         dtype = classify(path, text)
         doc_id = f"{case_id}/{path.name}"
         prec = PRECEDENCE.get(dtype, -2)
-        storage.execute("INSERT OR REPLACE INTO documents VALUES (?,?,?,?,?,?,?)",
-                        (doc_id, case_id, str(path.relative_to(config.ROOT)), path.name, dtype, prec, text))
+        storage.upsert("documents", ("doc_id", "case_id", "path", "filename", "doc_type", "precedence", "text"),
+                   (doc_id, case_id, str(path.relative_to(config.ROOT)), path.name, dtype, prec, text), ("doc_id",))
         stats["documents"] += 1
         chunker = CHUNKERS.get(dtype)
         pieces = chunker(text) if chunker else ([("Full text", path.stem, text)] if text and dtype in ("nor", "sof", "other") else [])
@@ -140,7 +174,7 @@ def ingest(reset: bool = False) -> dict:
                 continue
             c = {"chunk_id": f"{doc_id}#{n}", "doc_id": doc_id, "case_id": case_id, "doc_type": dtype,
                  "precedence": prec, "ref": ref, "title": title, "text": body}
-            storage.execute("INSERT OR REPLACE INTO chunks VALUES (?,?,?,?,?,?,?,?)", tuple(c.values()))
+            storage.upsert("chunks", tuple(c.keys()), tuple(c.values()), ("chunk_id",))
             all_chunks.append(c)
         if dtype == "weather_log":
             storage.execute("DELETE FROM weather WHERE case_id=?", (case_id,))
@@ -162,9 +196,10 @@ def ingest(reset: bool = False) -> dict:
                 dtype, text = add_doc(case_id, path)
                 if dtype == "sof":
                     meta = sof_header(text)
-        storage.execute("INSERT OR REPLACE INTO cases VALUES (?,?,?,?,?,?,?)",
-                        (case_id, str(folder.relative_to(config.ROOT)), meta.get("vessel"), meta.get("port"),
-                         meta.get("operation"), meta.get("charterers"), datetime.now().isoformat(timespec="seconds")))
+        storage.upsert("cases", ("case_id", "folder", "vessel", "port", "operation", "charterers", "ingested_at"),
+                   (case_id, str(folder.relative_to(config.ROOT)), meta.get("vessel"), meta.get("port"),
+                meta.get("operation"), meta.get("charterers"), datetime.now().isoformat(timespec="seconds")),
+                   ("case_id",))
         stats["cases"] += 1
 
     # ---- shared reference data
@@ -180,15 +215,17 @@ def ingest(reset: bool = False) -> dict:
     ports = sh / "port_information.json"
     if ports.exists():
         for name, info in json.loads(ports.read_text(encoding="utf-8")).items():
-            storage.execute("INSERT OR REPLACE INTO ports VALUES (?,?)", (name, json.dumps(info)))
+            storage.upsert("ports", ("port", "info"), (name, json.dumps(info)), ("port",))
     claims = sh / "past_claims_history.json"
     if claims.exists():
         for c in json.loads(claims.read_text(encoding="utf-8")):
-            storage.execute("INSERT OR REPLACE INTO past_claims VALUES (?,?,?,?,?,?,?,?)",
-                            (c["claim_id"], c["vessel"], c["counterparty"], c["port"], c["claimed_usd"],
-                             c["settled_usd"], c["status"], c["lessons"]))
+            storage.upsert("past_claims", ("claim_id", "vessel", "counterparty", "port", "claimed_usd",
+                                            "settled_usd", "status", "lessons"),
+                           (c["claim_id"], c["vessel"], c["counterparty"], c["port"], c["claimed_usd"],
+                            c["settled_usd"], c["status"], c["lessons"]), ("claim_id",))
 
     vectorstore.add_chunks(all_chunks)
     stats["chunks"] = len(all_chunks)
     stats["embeddings"] = vectorstore.embedding_kind()
+    _record_indexed_sources()
     return stats
